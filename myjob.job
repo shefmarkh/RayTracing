@@ -1,0 +1,10 @@
+Executable=/home/hodgkinson/RayTracing/main_cuda
+Arguments=
+Requirements = ( HasGPUs =?= True )
+input=/dev/null
+output=myjob.sh.o$(Cluster)-$(Process)
+error=myjob.sh.e$(Cluster)-$(Process)
+log=myjob.sh.l$(Cluster)-$(Process)
+request_memory=300MB
+maxjobretirementtime=1
+queue 1
