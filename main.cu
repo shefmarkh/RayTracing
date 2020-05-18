@@ -15,7 +15,7 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
     }
 }
 
-__global__ void render(float* fb, int* max_x, int* max_y){
+__global__ void render(double* fb, int* max_x, int* max_y){
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   if (i >= *max_x || j >= *max_y) return;
@@ -37,13 +37,13 @@ int main(){
   *ny_cpu = 256;
 
   int num_pixels = *nx_cpu * (*ny_cpu);
-  size_t fb_size = 3*num_pixels*sizeof(float);
+  size_t fb_size = 3*num_pixels*sizeof(double);
 
   //allocates memory on the CPU
-  float* fb_cpu = (float*)malloc(fb_size);
+  double* fb_cpu = (double*)malloc(fb_size);
 
   //allocates memory on the GPU, first argument is a pointer to a pointer to that memory
-  float *fb_gpu;
+  double *fb_gpu;
   checkCudaErrors(cudaMalloc((void **)&fb_gpu, fb_size));
 
   int *nx_gpu;
@@ -66,9 +66,9 @@ int main(){
   for (int j = *ny_cpu-1; j >= 0; --j) {
     for (int i = 0; i < *nx_cpu; ++i) {
       int pixelIndex = j* (*nx_cpu)*3 + i*3;
-      float r = fb_cpu[pixelIndex];
-      float g = fb_cpu[pixelIndex + 1];
-      float b = fb_cpu[pixelIndex + 2];
+      double r = fb_cpu[pixelIndex];
+      double g = fb_cpu[pixelIndex + 1];
+      double b = fb_cpu[pixelIndex + 2];
 
       int ir = static_cast<int>(255.999 * r);
       int ig = static_cast<int>(255.999 * g);
