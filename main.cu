@@ -33,12 +33,12 @@ int main(){
   int tx = 8;
   int ty = 8;
 
-  int* nx_cpu = (int*)malloc(sizeof(int));
-  *nx_cpu = 256;
+  //Allocate memory on CPU
+  int *nx_cpu = new int(256);
+  int *ny_cpu = new int(256);
+  float *fb_cpu = new float;
 
-  int* ny_cpu = (int*)malloc(sizeof(int));
-  *ny_cpu = 256;
-
+  //allocates memory on the GPU, first argument is a pointer to a pointer to that memory
   int num_pixels = *nx_cpu * (*ny_cpu);
 
   //allocates memory on the CPU
@@ -75,6 +75,11 @@ int main(){
       std::cout << ir << ' ' << ig << ' ' << ib << '\n';
     }
   }
+
+  //Clean memory on CPU
+  delete nx_cpu;
+  delete ny_cpu;
+  delete fb_cpu;
 
   return 1;
 }
