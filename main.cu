@@ -81,5 +81,10 @@ int main(){
   delete ny_cpu;
   delete fb_cpu;
 
+  //Clean memory on GPU
+  checkCudaErrors(cudaFree(nx_gpu));
+  checkCudaErrors(cudaFree(ny_gpu));
+  checkCudaErrors(cudaFree(fb_gpu));
+
   return 1;
 }
