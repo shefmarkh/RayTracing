@@ -17,7 +17,7 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
     }
 }
 
-__global__ void render(vec3* fb_vec3, int* max_x, int* max_y){
+__global__ void render(color* fb_color, int* max_x, int* max_y){
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   if (i >= *max_x || j >= *max_y) return;
@@ -25,7 +25,7 @@ __global__ void render(vec3* fb_vec3, int* max_x, int* max_y){
   double r = (double)i/(*max_x -1);
   double g = (double)j/(*max_y -1);
   double b = 0.25;
-  fb_vec3[pixelIndex] = vec3(r,g,b);
+  fb_color[pixelIndex] = color(r,g,b);
 }
 
 int main(){
@@ -42,12 +42,12 @@ int main(){
   int num_pixels = *nx_cpu * (*ny_cpu);
 
   //allocates memory on the CPU
-  size_t fb_vec3_size = num_pixels*sizeof(vec3);
-  vec3* fb_vec3_cpu = (vec3*)malloc(fb_vec3_size);
+  size_t fb_color_size = num_pixels*sizeof(color);
+  color* fb_color_cpu = (color*)malloc(fb_color_size);
 
   //allocates memory on the GPU, first argument is a pointer to a pointer to that memory
-  vec3* fb_vec3_gpu;
-  checkCudaErrors(cudaMalloc((void **)&fb_vec3_gpu, fb_vec3_size));
+  color* fb_color_gpu;
+  checkCudaErrors(cudaMalloc((void **)&fb_color_gpu, fb_color_size));
 
   int *nx_gpu;
   checkCudaErrors(cudaMalloc((void**)&nx_gpu, sizeof(int)));
@@ -59,16 +59,16 @@ int main(){
 
   dim3 blocks(*nx_cpu/tx+1,*ny_cpu/ty+1);
   dim3 threads(tx,ty);
-  render<<<blocks,threads>>>(fb_vec3_gpu,nx_gpu,ny_gpu);
+  render<<<blocks,threads>>>(fb_color_gpu,nx_gpu,ny_gpu);
   cudaDeviceSynchronize();
-  checkCudaErrors(cudaMemcpy(fb_vec3_cpu,fb_vec3_gpu,fb_vec3_size,cudaMemcpyDeviceToHost));
+  checkCudaErrors(cudaMemcpy(fb_color_cpu,fb_color_gpu,fb_color_size,cudaMemcpyDeviceToHost));
 
   std::cout << "P3\n" << *nx_cpu << ' ' << *ny_cpu << "\n255\n";
 
   for (int j = *ny_cpu-1; j >= 0; --j) {
     for (int i = 0; i < *nx_cpu; ++i) {
       int pixelIndex = j* (*nx_cpu) + i;
-      vec3 pixel = fb_vec3_cpu[pixelIndex];
+      color pixel = fb_color_cpu[pixelIndex];
       int ir = static_cast<int>(255.999 * pixel.x());
       int ig = static_cast<int>(255.999 * pixel.y());
       int ib = static_cast<int>(255.999 * pixel.z());
