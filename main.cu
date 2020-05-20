@@ -30,19 +30,15 @@ int main(){
   int tx = 8;
   int ty = 8;
 
-  int* nx_cpu = (int*)malloc(sizeof(int));
-  *nx_cpu = 256;
+  //Allocate memory on CPU
+  int *nx_cpu = new int(256);
+  int *ny_cpu = new int(256);
+  float *fb_cpu = new float;
 
-  int* ny_cpu = (int*)malloc(sizeof(int));
-  *ny_cpu = 256;
-
+  //allocates memory on the GPU, first argument is a pointer to a pointer to that memory
   int num_pixels = *nx_cpu * (*ny_cpu);
   size_t fb_size = 3*num_pixels*sizeof(float);
 
-  //allocates memory on the CPU
-  float* fb_cpu = (float*)malloc(fb_size);
-
-  //allocates memory on the GPU, first argument is a pointer to a pointer to that memory
   float *fb_gpu;
   checkCudaErrors(cudaMalloc((void **)&fb_gpu, fb_size));
 
@@ -77,6 +73,11 @@ int main(){
 
     }
   }
+
+  //Clean memory on CPU
+  delete nx_cpu;
+  delete ny_cpu;
+  delete fb_cpu;
 
   return 1;
 }
