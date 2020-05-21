@@ -44,16 +44,12 @@ int main(){
   //Allocate memory on CPU
   int *nx_cpu = new int(256);
   int *ny_cpu = new int(256);
-  float *fb_cpu = new float;
 
-  //allocates memory on the GPU, first argument is a pointer to a pointer to that memory
   int num_pixels = *nx_cpu * (*ny_cpu);
-
-  //allocates memory on the CPU
-  size_t fb_color_size = num_pixels*sizeof(color);
-  color* fb_color_cpu = (color*)malloc(fb_color_size);
+  color* fb_color_cpu = new color[num_pixels];
 
   //allocates memory on the GPU, first argument is a pointer to a pointer to that memory
+  size_t fb_color_size = num_pixels*sizeof(color);
   color* fb_color_gpu;
   checkCudaErrors(cudaMalloc((void **)&fb_color_gpu, fb_color_size));
 
@@ -87,7 +83,7 @@ int main(){
   //Clean memory on CPU
   delete nx_cpu;
   delete ny_cpu;
-  delete fb_cpu;
+  delete fb_color_cpu;
 
   return 1;
 }
