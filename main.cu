@@ -25,15 +25,26 @@ __device__ color ray_color(const ray& r) {
 }
 
 
-__global__ void render(color* fb_color, int* max_x, int* max_y){
+__global__ void render(color* fb_color, int* max_x, int* max_y, double *aspect_ratio){
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   if (i >= *max_x || j >= *max_y) return;
   int pixelIndex = j* (*max_x) + i;
-  double r = (double)i/(*max_x -1);
-  double g = (double)j/(*max_y -1);
-  double b = 0.25;
-  fb_color[pixelIndex] = color(r,g,b);
+
+  double viewport_height = 2.0;
+  double viewport_width = *aspect_ratio * viewport_height;
+  double focal_length = 1.0;
+
+  point3 origin = point3(0,0,0);
+  vec3 horizontal = vec3(viewport_width, 0, 0);
+  vec3 vertical = vec3(0, viewport_height, 0);
+  vec3 lower_left_corner = origin - horizontal/2 - vertical/2 - vec3(0, 0, focal_length);
+
+  double u = double(i) / (*max_x-1);
+  double v = double(j) / (*max_y-1);
+  ray theRay(origin, lower_left_corner + u*horizontal + v*vertical - origin);
+  fb_color[pixelIndex] = ray_color(theRay);
+
 }
 
 int main(){
@@ -42,8 +53,9 @@ int main(){
   int ty = 8;
 
   //Allocate memory on CPU
-  int *nx_cpu = new int(256);
-  int *ny_cpu = new int(256);
+  const double* aspect_ratio_cpu = new double(16.0 / 9.0);
+  int *nx_cpu = new int(384);
+  int *ny_cpu = new int((*nx_cpu)/(*aspect_ratio_cpu));
 
   int num_pixels = *nx_cpu * (*ny_cpu);
   color* fb_color_cpu = new color[num_pixels];
@@ -61,9 +73,13 @@ int main(){
   checkCudaErrors(cudaMalloc((void**)&ny_gpu, sizeof(int)));
   checkCudaErrors(cudaMemcpy(ny_gpu, ny_cpu, sizeof(int),cudaMemcpyHostToDevice));
 
+  double *aspect_ratio_gpu;
+  checkCudaErrors(cudaMalloc((void**)&aspect_ratio_gpu, sizeof(double)));
+  checkCudaErrors(cudaMemcpy(aspect_ratio_gpu, aspect_ratio_cpu, sizeof(double),cudaMemcpyHostToDevice));
+
   dim3 blocks(*nx_cpu/tx+1,*ny_cpu/ty+1);
   dim3 threads(tx,ty);
-  render<<<blocks,threads>>>(fb_color_gpu,nx_gpu,ny_gpu);
+  render<<<blocks,threads>>>(fb_color_gpu,nx_gpu,ny_gpu,aspect_ratio_gpu);
   cudaDeviceSynchronize();
   checkCudaErrors(cudaMemcpy(fb_color_cpu,fb_color_gpu,fb_color_size,cudaMemcpyDeviceToHost));
 
@@ -84,6 +100,12 @@ int main(){
   delete nx_cpu;
   delete ny_cpu;
   delete fb_color_cpu;
+  delete aspect_ratio_cpu;
+
+  //Clean memory on GPU
+  checkCudaErrors(cudaFree(nx_gpu));
+  checkCudaErrors(cudaFree(ny_gpu));
+  checkCudaErrors(cudaFree(fb_color_gpu));
 
   return 1;
 }

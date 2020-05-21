@@ -6,6 +6,9 @@
 class ray {
     public:
         ray() {}
+        #ifdef __CUDACC__
+        __host__ __device__ 
+        #endif 
         ray(const point3& origin, const vec3& direction)
             : orig(origin), dir(direction)
         {}
