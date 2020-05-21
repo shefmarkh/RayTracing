@@ -36,9 +36,9 @@ int main(){
   //Allocate memory on CPU
   int *nx_cpu = new int(256);
   int *ny_cpu = new int(256);
-  vec3 *fb_vec3_cpu = new vec3();
 
   int num_pixels = *nx_cpu * (*ny_cpu);
+  vec3 *fb_vec3_cpu = new vec3[num_pixels];
 
   //allocates memory on the GPU, first argument is a pointer to a pointer to that memory
   size_t fb_vec3_size = num_pixels*sizeof(vec3);
