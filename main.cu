@@ -36,16 +36,12 @@ int main(){
   //Allocate memory on CPU
   int *nx_cpu = new int(256);
   int *ny_cpu = new int(256);
-  float *fb_cpu = new float;
+  vec3 *fb_vec3_cpu = new vec3();
 
-  //allocates memory on the GPU, first argument is a pointer to a pointer to that memory
   int num_pixels = *nx_cpu * (*ny_cpu);
 
-  //allocates memory on the CPU
-  size_t fb_vec3_size = num_pixels*sizeof(vec3);
-  vec3* fb_vec3_cpu = (vec3*)malloc(fb_vec3_size);
-
   //allocates memory on the GPU, first argument is a pointer to a pointer to that memory
+  size_t fb_vec3_size = num_pixels*sizeof(vec3);
   vec3* fb_vec3_gpu;
   checkCudaErrors(cudaMalloc((void **)&fb_vec3_gpu, fb_vec3_size));
 
@@ -79,12 +75,12 @@ int main(){
   //Clean memory on CPU
   delete nx_cpu;
   delete ny_cpu;
-  delete fb_cpu;
+  delete fb_vec3_cpu;
 
   //Clean memory on GPU
   checkCudaErrors(cudaFree(nx_gpu));
   checkCudaErrors(cudaFree(ny_gpu));
-  checkCudaErrors(cudaFree(fb_gpu));
+  checkCudaErrors(cudaFree(fb_vec3_gpu));
 
   return 1;
 }
