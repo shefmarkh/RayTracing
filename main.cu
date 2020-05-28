@@ -6,6 +6,7 @@
 
 #include "vec3.h"
 #include "ray.h"
+#include "CommonFunctions.h"
 
 #define checkCudaErrors(val) check_cuda( (val), #val, __FILE__, __LINE__ )
 void check_cuda(cudaError_t result, char const *const func, const char *const file, int const line) {
@@ -17,23 +18,6 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
         exit(99);
     }
 }
-
-__device__ bool hit_sphere(const point3& center, double radius, const ray& r) {
-  vec3 oc = r.origin() - center;
-  double a = dot(r.direction(), r.direction());
-  double b = 2.0 * dot(oc, r.direction());
-  double c = dot(oc, oc) - radius*radius;
-  double discriminant = b*b - 4*a*c;
-  return (discriminant > 0);
-}
-
-__device__ color ray_color(const ray& r) {
-  if (hit_sphere(point3(0,0,-1), 0.5, r)) return color(1, 0, 0);
-  vec3 unit_direction = unit_vector(r.direction());
-  double t = 0.5*(unit_direction.y() + 1.0);
-  return (1.0-t)*color(1.0, 1.0, 1.0) + t*color(0.5, 0.7, 1.0);
-}
-
 
 __global__ void render(color* fb_color, int* max_x, int* max_y, double *aspect_ratio){
   int i = threadIdx.x + blockDim.x * blockIdx.x;
