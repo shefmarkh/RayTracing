@@ -53,12 +53,12 @@ int main(){
   int ty = 8;
 
   //Allocate memory on CPU
-  const double* aspect_ratio_cpu = new double(16.0 / 9.0);
-  int *nx_cpu = new int(384);
-  int *ny_cpu = new int((*nx_cpu)/(*aspect_ratio_cpu));
+  const double aspect_ratio_cpu = 16.0 / 9.0;
+  int nx_cpu = 384;
+  int ny_cpu = nx_cpu/aspect_ratio_cpu;
 
-  int num_pixels = *nx_cpu * (*ny_cpu);
-  color* fb_color_cpu = new color[num_pixels];
+  int num_pixels = nx_cpu * ny_cpu;
+  color fb_color_cpu[num_pixels];
 
   //allocates memory on the GPU, first argument is a pointer to a pointer to that memory
   size_t fb_color_size = num_pixels*sizeof(color);
@@ -67,27 +67,27 @@ int main(){
 
   int *nx_gpu;
   checkCudaErrors(cudaMalloc((void**)&nx_gpu, sizeof(int)));
-  checkCudaErrors(cudaMemcpy(nx_gpu, nx_cpu, sizeof(int),cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(nx_gpu, &nx_cpu, sizeof(int),cudaMemcpyHostToDevice));
 
   int *ny_gpu;
   checkCudaErrors(cudaMalloc((void**)&ny_gpu, sizeof(int)));
-  checkCudaErrors(cudaMemcpy(ny_gpu, ny_cpu, sizeof(int),cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(ny_gpu, &ny_cpu, sizeof(int),cudaMemcpyHostToDevice));
 
   double *aspect_ratio_gpu;
   checkCudaErrors(cudaMalloc((void**)&aspect_ratio_gpu, sizeof(double)));
-  checkCudaErrors(cudaMemcpy(aspect_ratio_gpu, aspect_ratio_cpu, sizeof(double),cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(aspect_ratio_gpu, &aspect_ratio_cpu, sizeof(double),cudaMemcpyHostToDevice));
 
-  dim3 blocks(*nx_cpu/tx+1,*ny_cpu/ty+1);
+  dim3 blocks(nx_cpu/tx+1,ny_cpu/ty+1);
   dim3 threads(tx,ty);
   render<<<blocks,threads>>>(fb_color_gpu,nx_gpu,ny_gpu,aspect_ratio_gpu);
   cudaDeviceSynchronize();
-  checkCudaErrors(cudaMemcpy(fb_color_cpu,fb_color_gpu,fb_color_size,cudaMemcpyDeviceToHost));
+  checkCudaErrors(cudaMemcpy(&fb_color_cpu,fb_color_gpu,fb_color_size,cudaMemcpyDeviceToHost));
 
-  std::cout << "P3\n" << *nx_cpu << ' ' << *ny_cpu << "\n255\n";
+  std::cout << "P3\n" << nx_cpu << ' ' << ny_cpu << "\n255\n";
 
-  for (int j = *ny_cpu-1; j >= 0; --j) {
-    for (int i = 0; i < *nx_cpu; ++i) {
-      int pixelIndex = j* (*nx_cpu) + i;
+  for (int j = ny_cpu-1; j >= 0; --j) {
+    for (int i = 0; i < nx_cpu; ++i) {
+      int pixelIndex = j* (nx_cpu) + i;
       color pixel = fb_color_cpu[pixelIndex];
       int ir = static_cast<int>(255.999 * pixel.x());
       int ig = static_cast<int>(255.999 * pixel.y());
@@ -95,12 +95,6 @@ int main(){
       std::cout << ir << ' ' << ig << ' ' << ib << '\n';
     }
   }
-
-  //Clean memory on CPU
-  delete nx_cpu;
-  delete ny_cpu;
-  delete fb_color_cpu;
-  delete aspect_ratio_cpu;
 
   //Clean memory on GPU
   checkCudaErrors(cudaFree(nx_gpu));
