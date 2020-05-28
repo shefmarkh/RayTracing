@@ -13,6 +13,9 @@ class ray {
             : orig(origin), dir(direction)
         {}
 
+        #ifdef __CUDACC__
+        __host__ __device__ 
+        #endif 
         point3 origin() const  { return orig; }
         #ifdef __CUDACC__
         __host__ __device__ 
