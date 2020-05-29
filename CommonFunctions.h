@@ -8,12 +8,12 @@ __device__
 #endif 
 void calcDiscriminant(const point3& center, double radius, const ray& r, double (&discriminant)[3]){
   vec3 oc = r.origin() - center;
-  double a = dot(r.direction(), r.direction());
-  double b = 2.0 * dot(oc, r.direction());
-  double c = dot(oc, oc) - radius*radius;
-  discriminant[0] = b*b - 4*a*c;
+  double a = r.direction().length_squared();
+  double half_b = dot(oc, r.direction());
+  double c = oc.length_squared() - radius*radius;
+  discriminant[0] = half_b*half_b - a*c;
   discriminant[1] = a;
-  discriminant[2] = b;
+  discriminant[2] = half_b;
 }
 
 #ifdef __CUDACC__
@@ -38,7 +38,7 @@ double calcHitDisciminantOnSphere(const point3& center, double radius, const ray
   if (discriminant[0] < 0) {
     return -1.0;
   } else {
-    return (-discriminant[2] - sqrt(discriminant[0]) ) / (2.0*discriminant[1]);
+    return (-discriminant[2] - sqrt(discriminant[0]) ) / discriminant[1];
   }
 }
 
