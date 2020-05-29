@@ -4,7 +4,7 @@
 #include "color.h"
 #include "ray.h"
 #include "CommonFunctions.h"
-
+#include "sphere.h"
 
 int main() {
     
