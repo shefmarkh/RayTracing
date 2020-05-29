@@ -22,6 +22,9 @@ class ray {
         #endif 
         vec3 direction() const { return dir; }
 
+        #ifdef __CUDACC__
+        __host__ __device__ 
+        #endif 
         point3 at(double t) const {
             return orig + t*dir;
         }
