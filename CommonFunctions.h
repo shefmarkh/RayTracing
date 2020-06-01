@@ -2,6 +2,8 @@
 #define COMMONFUNCTIONS_H
 
 #include <vector>
+#include <limits>
+#include "hittable.h"
 
 #ifdef __CUDACC__
 __device__ 
@@ -45,14 +47,13 @@ double calcHitDisciminantOnSphere(const point3& center, double radius, const ray
 #ifdef __CUDACC__
 __device__ 
 #endif 
-color ray_color(const ray& r) {
-  double t = calcHitDisciminantOnSphere(point3(0,0,-1), 0.5, r);
-  if (t > 0.0) {
-    vec3 N = unit_vector(r.at(t) - vec3(0,0,-1));
-    return 0.5*color(N.x()+1, N.y()+1, N.z()+1);
+color ray_color(const ray& r, const hittable& world) {
+  hit_record rec;
+  if (world.hit(r, 0, std::numeric_limits<double>::infinity(), rec)) {
+    return 0.5 * (rec.normal + color(1,1,1));
   }
   vec3 unit_direction = unit_vector(r.direction());
-  t = 0.5*(unit_direction.y() + 1.0);
+  double t = 0.5*(unit_direction.y() + 1.0);
   return (1.0-t)*color(1.0, 1.0, 1.0) + t*color(0.5, 0.7, 1.0);
 }
 
