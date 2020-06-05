@@ -20,7 +20,7 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
     }
 }
 
-__global__ void render(color* fb_color, int* max_x, int* max_y, double *aspect_ratio){
+__global__ void render(color* fb_color, int* max_x, int* max_y, double *aspect_ratio, hittable_list_gpu<2>* theWorld){
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   if (i >= *max_x || j >= *max_y) return;
@@ -38,8 +38,18 @@ __global__ void render(color* fb_color, int* max_x, int* max_y, double *aspect_r
   double u = double(i) / (*max_x-1);
   double v = double(j) / (*max_y-1);
   ray theRay(origin, lower_left_corner + u*horizontal + v*vertical - origin);
-  fb_color[pixelIndex] = ray_color(theRay);
+  fb_color[pixelIndex] = ray_color<2>(theRay,*theWorld);
 
+}
+
+__global__ void createWorld(hittable_list_gpu<2>* theWorld){
+  if (threadIdx.x == 0 && blockIdx.x == 0) {
+    //These sphere will be owned by world above - it will delete them in its constructor.
+    sphere_gpu* sphere1 = new sphere_gpu(point3(0,0,-1), 0.5);
+    sphere_gpu* sphere2 = new sphere_gpu(point3(0,-100.5,-1), 100);
+    theWorld->add(sphere1,0);
+    theWorld->add(sphere2,1);
+  }
 }
 
 int main(){
@@ -75,9 +85,11 @@ int main(){
   hittable_list_gpu<2> *world_gpu;
   checkCudaErrors(cudaMalloc((void**)&world_gpu, sizeof(hittable_list_gpu<2>)));
 
+  createWorld<<<1,1>>>(world_gpu);
+
   dim3 blocks(nx_cpu/tx+1,ny_cpu/ty+1);
   dim3 threads(tx,ty);
-  render<<<blocks,threads>>>(fb_color_gpu,nx_gpu,ny_gpu,aspect_ratio_gpu);
+  render<<<blocks,threads>>>(fb_color_gpu,nx_gpu,ny_gpu,aspect_ratio_gpu,world_gpu);
   cudaDeviceSynchronize();
   checkCudaErrors(cudaMemcpy(&fb_color_cpu,fb_color_gpu,fb_color_size,cudaMemcpyDeviceToHost));
 

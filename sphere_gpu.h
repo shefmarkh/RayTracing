@@ -11,6 +11,9 @@ struct hit_record_gpu {
     bool front_face;
 
     //set normal based on whether the ray is inside or outside the sphere
+    #ifdef __CUDACC__
+    __device__ 
+    #endif 
     inline void set_face_normal(const ray& r, const vec3& outward_normal) {
         front_face = dot(r.direction(), outward_normal) < 0;
         normal = front_face ? outward_normal :-outward_normal;
@@ -21,11 +24,20 @@ struct hit_record_gpu {
 class sphere_gpu {
     public:
         sphere_gpu() {}
+        #ifdef __CUDACC__
+        __device__ 
+        #endif 
         sphere_gpu(point3 cen, double r) : center(cen), radius(r) {};
 
+        #ifdef __CUDACC__
+        __device__ 
+        #endif 
         bool hit(const ray& r, double tmin, double tmax, hit_record_gpu& rec) const;
 
     private:
+      #ifdef __CUDACC__
+      __device__ 
+      #endif 
       void fillHitRecord(hit_record_gpu& rec, const ray& r, const double& solution ) const;
 
     public:
@@ -33,6 +45,9 @@ class sphere_gpu {
         double radius;
 };
 
+#ifdef __CUDACC__
+__device__ 
+#endif 
 void sphere_gpu::fillHitRecord(hit_record_gpu& rec, const ray& r, const double& solution ) const{
   rec.t = solution;
   rec.p = r.at(rec.t);
@@ -40,6 +55,9 @@ void sphere_gpu::fillHitRecord(hit_record_gpu& rec, const ray& r, const double& 
   rec.set_face_normal(r, outward_normal);
 }
 
+#ifdef __CUDACC__
+__device__ 
+#endif 
 bool sphere_gpu::hit(const ray& r, double t_min, double t_max, hit_record_gpu& rec) const {
     vec3 oc = r.origin() - center;
     double a = r.direction().length_squared();

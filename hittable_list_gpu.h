@@ -15,8 +15,14 @@ template <unsigned int ARRAYSIZE> class hittable_list_gpu {
           }          
         }
         
+        #ifdef __CUDACC__
+        __device__ 
+        #endif 
         void add(sphere_gpu* object, const unsigned int& index) { if (index < ARRAYSIZE) m_objects[index] = object; }
 
+        #ifdef __CUDACC__
+        __device__ 
+        #endif 
         bool hit(const ray& r, double t_min, double t_max, hit_record_gpu& rec) const{
           hit_record_gpu temp_rec;
           bool hit_anything = false;

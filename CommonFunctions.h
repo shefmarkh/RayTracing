@@ -44,12 +44,14 @@ double calcHitDisciminantOnSphere(const point3& center, double radius, const ray
   }
 }
 
+template <int ARRAYSIZE> 
 #ifdef __CUDACC__
-__device__ 
+__device__
 #endif 
-template <int ARRAYSIZE> color ray_color(const ray& r, const hittable_list_gpu<ARRAYSIZE>& world) {
+color ray_color(const ray& r, const hittable_list_gpu<ARRAYSIZE>& world) {
   hit_record_gpu rec;
-  if (world.hit(r, 0, std::numeric_limits<double>::infinity(), rec)) {
+
+  if (world.hit(r, 0, 100000000.0, rec)) {
     return 0.5 * (rec.normal + color(1,1,1));
   }
   vec3 unit_direction = unit_vector(r.direction());
