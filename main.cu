@@ -7,6 +7,7 @@
 #include "vec3.h"
 #include "ray.h"
 #include "CommonFunctions.h"
+#include "hittable_list_gpu.h"
 
 #define checkCudaErrors(val) check_cuda( (val), #val, __FILE__, __LINE__ )
 void check_cuda(cudaError_t result, char const *const func, const char *const file, int const line) {
@@ -71,11 +72,15 @@ int main(){
   checkCudaErrors(cudaMalloc((void**)&aspect_ratio_gpu, sizeof(double)));
   checkCudaErrors(cudaMemcpy(aspect_ratio_gpu, &aspect_ratio_cpu, sizeof(double),cudaMemcpyHostToDevice));
 
+  hittable_list_gpu<2> *world_gpu;
+  checkCudaErrors(cudaMalloc((void**)&world_gpu, sizeof(hittable_list_gpu<2>)));
+
   dim3 blocks(nx_cpu/tx+1,ny_cpu/ty+1);
   dim3 threads(tx,ty);
   render<<<blocks,threads>>>(fb_color_gpu,nx_gpu,ny_gpu,aspect_ratio_gpu);
   cudaDeviceSynchronize();
   checkCudaErrors(cudaMemcpy(&fb_color_cpu,fb_color_gpu,fb_color_size,cudaMemcpyDeviceToHost));
+
 
   std::cout << "P3\n" << nx_cpu << ' ' << ny_cpu << "\n255\n";
 

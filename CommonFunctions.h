@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <limits>
-#include "hittable.h"
+#include "hittable_list_gpu.h"
 
 #ifdef __CUDACC__
 __device__ 
@@ -47,8 +47,8 @@ double calcHitDisciminantOnSphere(const point3& center, double radius, const ray
 #ifdef __CUDACC__
 __device__ 
 #endif 
-color ray_color(const ray& r, const hittable& world) {
-  hit_record rec;
+template <int ARRAYSIZE> color ray_color(const ray& r, const hittable_list_gpu<ARRAYSIZE>& world) {
+  hit_record_gpu rec;
   if (world.hit(r, 0, std::numeric_limits<double>::infinity(), rec)) {
     return 0.5 * (rec.normal + color(1,1,1));
   }
